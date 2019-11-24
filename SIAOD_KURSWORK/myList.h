@@ -1,12 +1,11 @@
 #pragma once
-#ifndef MY_LIST
-#define MY_LIST
 
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include "AVL.h"
+#include "vertex.h"
 
 struct with_separator {
   with_separator(std::string sep) : sep(std::move(sep)) {}
@@ -42,9 +41,9 @@ separated_stream operator<<(std::ostream &stream, with_separator wsep) {
   return separated_stream(stream, std::move(wsep.sep));
 }
 
+namespace mi {
 template <typename T>
 class myList {
-  typedef vertex<T> Vertex;
  private:
   struct element {
     element(element *next_, T str_) : next(next_), str(str_){};
@@ -55,18 +54,19 @@ class myList {
       uint8_t digit[sizeof(T)];
     };
   };
-
   struct queue {
     element *head;
     element *tail;
   } Queue;
 
   std::vector<element *> _vec;
+  std::shared_ptr<AVL<T>> _avl;
 
   void __sort(element **head, element **tail);
 
-
  public:
+  using Vertex = vertex<T>;
+
   myList();
   void sort();
   void push_back(T _str);
@@ -74,8 +74,35 @@ class myList {
   void toMas();
   int binSearch(int);
   void createAVL(int);
+  std::vector<T*> search(std::string key) {
+    std::vector<T*> vFindElements;
+
+    std::function<void(Vertex* vertex)> f = ([&f, key, &vFindElements](Vertex *vertex) {
+      if (vertex == nullptr) {
+        return;
+      }
+      std::string cropped(vertex->Data->name, 3);
+      
+      if (key > cropped) {
+        f(vertex->Right);
+      } else if (key == cropped) {
+        vFindElements.push_back(vertex->Data);
+        f(vertex->Right);
+        f(vertex->Left);
+	  } else {
+        f(vertex->Left);
+	  }
+    });
+	
+	f(_avl->getRoot());
+    return vFindElements;
+  };
+
   ~myList();
 };
+
+template <typename T>
+using Vertex = vertex<T>;
 
 template <typename T>
 void myList<T>::sort() {
@@ -129,15 +156,16 @@ void myList<T>::toMas() {
 
 template <typename T>
 void myList<T>::createAVL(int start) {
+  using Vertex = vertex<T>;
   element *temp = _vec.at(start);
   uint16_t N = 0;
-  auto avl = AVL<T>::createTree();
+  _avl = mi::AVL<T>::createTree();
 
   for (size_t i = start; _vec.at(i)->str.office == temp->str.office; i++) {
-    avl->addNode(&_vec.at(i)->str);
+    _avl->addNode(&_vec.at(i)->str);
   }
-  avl->leftTravers(avl->getRoot(), [&N](T* data) { 
-	  std::cout << N++ << data->name << std::endl;
+  _avl->leftTravers(_avl->getRoot(), [&N](Vertex *vertex) {
+    std::cout << N++ << vertex->Data->name << std::endl;
   });
 }
 
@@ -196,5 +224,4 @@ myList<T>::~myList() {
   }
   delete element_to_delete;
 }
-
-#endif
+}  // namespace mi

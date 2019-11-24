@@ -1,28 +1,122 @@
 #pragma once
 #include <iostream> // ubrat'
+#include <functional>
+#include "vertex.h"
 
-template <typename T>
-struct vertex {
-  T* Data;
-  int8_t Balance = 0;
-  vertex* Left = nullptr;
-  vertex* Right = nullptr;
-};
 
+namespace mi {
 template <typename T>
 class AVL{
-  typedef vertex<T> Vertex;
+ public:
+  
+
  private:
+  using Vertex = vertex<T>;
   Vertex* _Root = nullptr;
   bool rost = 0;
   bool umen = 0;
-  uint16_t n = 0; //ubrat
- 
-private:
-  void __print(Vertex* vertex);
-  // ubr
-  void __addNode(T* inputData, Vertex*& vertex);
-  void __delNode(Vertex** vertex, char* toDel);
+
+ private:
+  void __addNode(T* toAdd, Vertex*& vertex) {
+    if (vertex == nullptr) {
+      vertex = new Vertex();
+      vertex->Data = toAdd;
+      rost = true;
+    } else {
+      std::string dataName(vertex->Data->name, 3);
+      std::string toAddName(toAdd->name, 3);
+
+      if (dataName > toAddName) {
+        __addNode(toAdd, vertex->Left);
+
+        if (rost) {
+          if (vertex->Balance > 0) {
+            vertex->Balance = 0;
+            rost = false;
+          } else if (vertex->Balance == 0) {
+            vertex->Balance = -1;
+            rost = true;
+          } else if (vertex->Left->Balance < 0) {
+            LL(vertex, this);
+            rost = false;
+          } else {
+            LR(vertex, this);
+            rost = false;
+          }
+        }
+      } else if (dataName < toAddName) {
+        __addNode(toAdd, vertex->Right);
+
+        if (rost) {
+          if (vertex->Balance < 0) {
+            vertex->Balance = 0;
+            rost = false;
+          } else if (vertex->Balance == 0) {
+            vertex->Balance = 1;
+            rost = true;
+          } else if (vertex->Right->Balance > 0) {
+            RR(vertex, this);
+            rost = false;
+          } else {
+            RL(vertex, this);
+            rost = false;
+          }
+        }
+      } else {
+        __addNode(toAdd, vertex->Right);
+
+        if (rost) {
+          if (vertex->Balance < 0) {
+            vertex->Balance = 0;
+            rost = false;
+          } else if (vertex->Balance == 0) {
+            vertex->Balance = 1;
+            rost = true;
+          } else if (vertex->Right->Balance > 0) {
+            RR(vertex, this);
+            rost = false;
+          } else {
+            RL(vertex, this);
+            rost = false;
+          }
+        }
+      }
+    }
+  };
+  void __delNode(Vertex** vertex, char* toDel) {
+    Vertex* q = nullptr;
+    std::string name = "";
+    char* nameChar = nullptr;
+    if ((*vertex) != nullptr) {
+      // name = (*vertex)->Data;
+      nameChar = &name[0];
+    }
+
+    if ((*vertex) == nullptr) {
+      umen = false;
+    } else if (strcmp(nameChar, toDel) > 0) {
+      __delNode(&(*vertex)->Left, toDel);
+      if (umen) BL(&(*vertex), this);
+    } else if (strcmp(nameChar, toDel) < 0) {
+      __delNode(&(*vertex)->Right, toDel);
+      if (umen) BR(&(*vertex), this);
+    } else {
+      q = (*vertex);
+      if (q->Left == nullptr) {
+        (*vertex) = q->Right;
+        umen = true;
+      } else if (q->Right == nullptr) {
+        (*vertex) = q->Left;
+        umen = true;
+      } else {
+        __delNodewth(&(q->Left), this, &q);
+        if (umen) {
+          BL(&(*vertex), this);
+        }
+      }
+      q = nullptr;
+    }
+  };
 
   friend void __delNodewth(Vertex** r, AVL<T>* tree, Vertex** q) {
     if ((*r)->Right != nullptr) {
@@ -157,129 +251,33 @@ private:
     q->Left = (*vertex);
     (*vertex) = q;
   };
-  
-public:
+
+ public:
   AVL<T>();
+  ~AVL<T>();
+
   static std::shared_ptr<AVL<T>> createTree();
 
   void addNode(T*);
   void delNode(std::string toDel);
-  void print();
-  Vertex* getRoot(){ return _Root; };
+  Vertex* getRoot() { return _Root; };
 
   template <typename LYAMBDA>
   void leftTravers(Vertex* vertex, LYAMBDA f);
 
   template <typename LYAMBDA>
-  void rightTravers(LYAMBDA f, Vertex* vertex);
+  void rightTravers(Vertex* vertex, LYAMBDA lyambda);
 
   template <typename LYAMBDA>
-  void upperTravers(LYAMBDA f, Vertex* vertex);
+  void upperTravers(Vertex* vertex, LYAMBDA lyambda);
 };
 
 template <typename T>
-AVL<T>::AVL() {}
+AVL<T>::AVL() {} 
 
 template <typename T>
-void AVL<T>::__addNode(T* toAdd, Vertex*& vertex) {
-  if (vertex == nullptr) {
-    vertex = new Vertex();
-    vertex->Data = toAdd;
-    rost = true;
-  } else if (strcmp(vertex->Data->name, toAdd->name) > 0) {
-    __addNode(toAdd, vertex->Left);
-
-    if (rost) {
-      if (vertex->Balance > 0) {
-        vertex->Balance = 0;
-        rost = false;
-      } else if (vertex->Balance == 0) {
-        vertex->Balance = -1;
-        rost = true;
-      } else if (vertex->Left->Balance < 0) {
-        LL(vertex, this);
-        rost = false;
-      } else {
-        LR(vertex, this);
-        rost = false;
-      }
-    }
-  } else if(strcmp(vertex->Data->name, toAdd->name) < 0) {
-    __addNode(toAdd, vertex->Right);
-
-    if (rost) {
-      if (vertex->Balance < 0) {
-        vertex->Balance = 0;
-        rost = false;
-      } else if (vertex->Balance == 0) {
-        vertex->Balance = 1;
-        rost = true;
-      } else if (vertex->Right->Balance > 0) {
-        RR(vertex, this);
-        rost = false;
-      } else {
-        RL(vertex, this);
-        rost = false;
-      }
-    }
-  } else {
-    __addNode(toAdd, vertex->Right);
-
-    if (rost) {
-      if (vertex->Balance < 0) {
-        vertex->Balance = 0;
-        rost = false;
-      } else if (vertex->Balance == 0) {
-        vertex->Balance = 1;
-        rost = true;
-      } else if (vertex->Right->Balance > 0) {
-        RR(vertex, this);
-        rost = false;
-      } else {
-        RL(vertex, this);
-        rost = false;
-      }
-    }
-  }
-}
-
-template <typename T>
-void AVL<T>::addNode(T* toAdd) { __addNode(toAdd, _Root); }
-
-template <typename T>
-void AVL<T>::__delNode(Vertex** vertex, char* toDel) {
-  Vertex* q = nullptr;
-  std::string name = "";
-  char* nameChar = nullptr;
-  if ((*vertex) != nullptr) {
-    //name = (*vertex)->Data;
-    nameChar = &name[0];
-  }
-  
-  if ((*vertex) == nullptr) {
-    umen = false;
-  } else if (strcmp(nameChar, toDel) > 0) {
-    __delNode(&(*vertex)->Left, toDel);
-    if (umen) BL(&(*vertex), this);
-  } else if (strcmp(nameChar, toDel) < 0) {
-    __delNode(&(*vertex)->Right, toDel);
-    if (umen) BR(&(*vertex), this);
-  } else {
-    q = (*vertex);
-    if (q->Left == nullptr) {
-      (*vertex) = q->Right;
-      umen = true;
-    } else if (q->Right == nullptr) {
-      (*vertex) = q->Left;
-      umen = true;
-    } else {
-      __delNodewth(&(q->Left), this, &q);
-      if (umen) {
-        BL(&(*vertex), this);
-      }
-    }
-    q = nullptr;
-  }
+void AVL<T>::addNode(T* toAdd) {
+  __addNode(toAdd, _Root);
 }
 
 template <typename T>
@@ -290,57 +288,48 @@ void AVL<T>::delNode(std::string toDel) {
 }
 
 template <typename T>
-void AVL<T>::print() {
-  __print(_Root);
-  std::cout << std::endl;
-}
-
-template <typename T>
-void AVL<T>::__print(Vertex* vertex) {
-  if (vertex == nullptr) return;
-  
-  __print(vertex->Left);
-  std::cout << n++ << vertex->Data->name << std::endl;
-  __print(vertex->Right);
-}
-
-template <typename T>
 template <typename LYAMBDA>
-void AVL<T>::leftTravers(Vertex* vertex, LYAMBDA f) {
+void AVL<T>::leftTravers(Vertex* vertex, LYAMBDA lyambda) {
   if (vertex == nullptr) {
     return;
   }
 
-  leftTravers(vertex->Left, f);
-  f(vertex->Data);
-  leftTravers(vertex->Right, f);
+  leftTravers(vertex->Left, lyambda);
+  lyambda(vertex);
+  leftTravers(vertex->Right, lyambda);
 }
 
 template <typename T>
 template <typename LYAMBDA>
-void AVL<T>::rightTravers(LYAMBDA f, Vertex* vertex) {
+void AVL<T>::rightTravers(Vertex* vertex, LYAMBDA lyambda) {
   if (vertex == nullptr) {
     return;
   }
 
-  rightTravers(vertex->Right, f);
-  f(vertex->Data);
-  rightTravers(vertex->Left, f);
+  rightTravers(vertex->Right, lyambda);
+  lyambda(vertex->Data);
+  rightTravers(vertex->Left, lyambda);
 }
 
 template <typename T>
 template <typename LYAMBDA>
-void AVL<T>::upperTravers(LYAMBDA f, Vertex* vertex) {
+void AVL<T>::upperTravers(Vertex* vertex, LYAMBDA lyambda) {
   if (vertex == nullptr) {
     return;
   }
 
-  f(vertex->Data);
-  upperTravers(vertex->Left, f);
-  upperTravers(vertex->Right, f);
+  lyambda(vertex->Data);
+  upperTravers(vertex->Left, lyambda);
+  upperTravers(vertex->Right, lyambda);
 }
 
 template <typename T>
 std::shared_ptr<AVL<T>> AVL<T>::createTree() {
   return std::make_shared<AVL<T>>();
 };
+
+template <typename T>
+AVL<T>::~AVL() {
+  leftTravers(_Root, [](Vertex* vertex) { vertex = nullptr; });
+}
+}  // namespace mi
