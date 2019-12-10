@@ -23,8 +23,8 @@ class AVL{
       vertex->Data = toAdd;
       rost = true;
     } else {
-      std::string dataName(vertex->Data->name, 3);
-      std::string toAddName(toAdd->name, 3);
+      std::string dataName((char*)vertex->Data->name);
+      std::string toAddName((char*)toAdd->name);
 
       if (dataName > toAddName) {
         __addNode(toAdd, vertex->Left);

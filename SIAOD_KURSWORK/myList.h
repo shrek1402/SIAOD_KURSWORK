@@ -81,7 +81,7 @@ class myList {
       if (vertex == nullptr) {
         return;
       }
-      std::string cropped(vertex->Data->name, 3);
+      std::string cropped((char*)vertex->Data->name);
       
       if (key > cropped) {
         f(vertex->Right);
@@ -162,6 +162,9 @@ void myList<T>::createAVL(int start) {
   _avl = mi::AVL<T>::createTree();
 
   for (size_t i = start; _vec.at(i)->str.office == temp->str.office; i++) {
+    if (i == 3999) {
+		break;
+    }
     _avl->addNode(&_vec.at(i)->str);
   }
   _avl->leftTravers(_avl->getRoot(), [&N](Vertex *vertex) {
