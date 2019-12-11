@@ -88,23 +88,40 @@ int main() {
 
   ///////////////////////////////////////////////////////////////////////////////////////////
 
-   ofstream out("zap.dat",ios::binary|ios::out); //Открываем файл в двоичном режиме для записи
-   
+  ofstream out(
+      "zap.dat",
+      ios::binary | ios::out);  //Открываем файл в двоичном режиме для записи
 
   auto huf = Huffman::Huffman(ver.size() - 1, ver);
   auto myMap = huf.getMap(kolvo);
 
-  for (size_t i = 0; i < 4000*64; i++) {
-    auto it = myMap.find((char)(bayt[i] ));
-    auto bits = it->second;
-    for (size_t j = 0; j < bits.size(); j++) {
-      char a = (char)(bits[j]);
-      out.write((char *)&a, sizeof a);
+  std::vector<bool> bits;
+
+  for (size_t i = 0; i < 4000 * 64; i++) { ///
+    auto it = myMap.find((char)(bayt[i]));
+    auto b = it->second;
+    for (size_t j = 0; j < b.size(); j++) {
+      bits.emplace_back(b[j]);////dolgo
     }
   }
+
+  for (size_t i = 0; i < bits.size(); i += 8) {  ///////
+    char bayt = ' ';
+    for (size_t j = i; j < i + 8 && j < bits.size(); j++) {
+      if (bits[j] == 0) {
+        bayt <<= 1;
+      } else {
+        bayt <<= 1;
+        bayt |= (1 << 0);
+      }
+    }
+    //bayt = (char)(bayt + 128);
+    out.write((char *)&bayt, sizeof bayt);
+  }
+
   out.close();
 
-    std::map<std::vector<bool>, char> mapDecode;
+  std::map<std::vector<bool>, char> mapDecode;
 
   for (auto it = myMap.begin(); it != myMap.end(); it++) {
     std::cout << it->first << "\t";
@@ -115,25 +132,49 @@ int main() {
     std::cout << std::endl;
   }
 
-
   ifstream dataDecode("zap.dat", ios::binary);
-  
+
   std::vector<bool> vDecode;
-  int tempBool;
-  for (int j = 0; j < 1*64; j++) {
+
+  char tempBool;
+  for (int j = 0; j < 4000 * 64; j++) {
     tempBool = 0;
 
-    dataIn.read((char *)&tempBool, sizeof(char));
-    std::cout << tempBool;
+    dataDecode.read((char *)&tempBool, sizeof(char));
+    for (int i = 7; i >= 0; i--) {
+      if (tempBool & (1 << i)) { /* во второй бит вписана единица */
+        vDecode.emplace_back(1);
+      } else {
+        vDecode.emplace_back(0);
+	  }
+    }
   }
 
+  std::vector<bool> kod;
+
+  union {
+    record rectemp;
+    char ch[64];
+  };
   
 
+  for (size_t i = 0, j = 0, num = 1; i < vDecode.size() && num <=4000; i++) {
+    kod.push_back(vDecode[i]);
+    auto it = mapDecode.find(kod);
+    if (it != mapDecode.end()) {
+      j++;
 
-
-
-
-
+        ch[j - 1] = it->second;
+      
+      if (j % 64 == 0) {
+        std::cout << num << "\t" << rectemp.name << "\t" << rectemp.birthDay << "\t"
+                  << rectemp.office << "\t" << rectemp.position << std::endl;
+        j = 0;
+        num++;
+      }
+      kod.clear();
+    }
+  }
 
 
   bool exit = 1;
