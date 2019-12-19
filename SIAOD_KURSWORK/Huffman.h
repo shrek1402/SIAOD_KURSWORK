@@ -9,6 +9,9 @@ class Huffman {
   std::vector<double> _P;
 
  public:
+	 std::vector<uint16_t> getL() { return _L;
+  }
+
   std::map<char, std::vector<bool>> getMap(
       std::vector<std::pair<char, double>> kolvo) {
 		std::map<char, std::vector<bool>> myMap;
