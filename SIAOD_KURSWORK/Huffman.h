@@ -30,7 +30,7 @@ class Huffman {
                   _C.push_back(temp);
 		}
 	  
-	  Huf(n, P);
+	  Huf(n, _P);
 
     for (size_t i = 0; i < _C.size(); i++) {
             for (size_t j = 0; j < _C[i].size(); j++) {
@@ -47,17 +47,17 @@ class Huffman {
 
 
  private:
-  void Huf(uint64_t n, std::vector<double> P) {
+  void Huf(uint64_t n, std::vector<double> &P) {
     if (n == 1) {
       _C[0][0] = 0;
-      _L[0] = 1;
       _C[1][0] = 1;
+      _L[0] = 1;
       _L[1] = 1;
     } else {
-      double q = P[n - 1] + P[n];
+      double q = P[P.size() - 1] + P[P.size() - 2];
       uint16_t j = Up(n, q);
-      _P.pop_back();
-      _P.pop_back();
+      P.pop_back();
+      P.pop_back();
       Huf(n - 1, P);
       Down(n, j);
     }
@@ -65,15 +65,16 @@ class Huffman {
 
   uint16_t Up(uint64_t n, double q) {
     for (std::vector<double>::iterator it = _P.begin(); it < _P.end(); it++) {
-      if (*it <= q) {
+      if (*it < q) {
         auto a = (uint16_t)std::distance(_P.begin(), it);
         _P.insert(it, q);
 		
         return a;
       }
     }
+    return _P.size();
   }
-
+  //   3 2 1 
   void Down(uint64_t n, uint16_t j) {
     auto S = _C[j];
     auto L = _L[j];
